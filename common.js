@@ -1,10 +1,19 @@
-var request = require('request');
+const request = require('request');
+const colors = require('colors');
+const xpath = require('xpath');
+const dom = require('xmldom').DOMParser;
 
 module.exports = {
     asyncGetJSONs: asyncGetJSONs,
+    asyncGetHTMLs: asyncGetHTMLs,
     prepareRowObjects: prepareRowObjects,
     createTSV: createTSV,
-    getFormattedDate: getFormattedDate
+    getFormattedDate: getFormattedDate,
+    getTextFor: getTextFor,
+    getTextFromDoc: getTextFromDoc,
+    digitsOnly: digitsOnly,
+    stringToDoc: stringToDoc,
+    getNodes: getNodes
 };
 
 async function asyncGetJSONs(urls, callback) {
@@ -12,18 +21,62 @@ async function asyncGetJSONs(urls, callback) {
     for (var i = 0; i < urls.length; i++) {
         promises.push(new Promise((resolve, reject) => {
             request(urls[i], function (error, response, body) {
-                console.log(response.statusCode + ' - ' + response.request.uri.href);
+                var consoleText = response.statusCode + ' - ' + response.request.uri.href;
+                if (response.statusCode != 200) {
+                    console.log(consoleText.red);
+                } else {
+                    console.log(consoleText.green);
+                }
                 if (error) {
                     console.log('error');
                     resolve(null);
                 } else {
-                    resolve(JSON.parse(body));
+                    try {
+                        resolve(JSON.parse(body));
+                    } catch (e) {
+                        console.log(e);
+                        resolve(undefined);
+                    }
                 }
             });
         }));
     }
 
-    return Promise.all(promises);
+    return Promise.all(promises).then(function (resolvedPromises) {
+        console.log('Done');
+        return resolvedPromises;
+    }, function (error) {
+        console.log('Error(s) while scraping!'.red);
+    });
+}
+
+async function asyncGetHTMLs(urls, callback) {
+    var promises = [];
+    for (var i = 0; i < urls.length; i++) {
+        promises.push(new Promise((resolve, reject) => {
+            request(urls[i], function (error, response, body) {
+                var consoleText = response.statusCode + ' - ' + response.request.uri.href;
+                if (response.statusCode != 200) {
+                    console.log(consoleText.red);
+                } else {
+                    console.log(consoleText.green);
+                }
+                if (error) {
+                    console.log('error');
+                    resolve(null);
+                } else {
+                    resolve(body);
+                }
+            });
+        }));
+    }
+
+    return Promise.all(promises).then(function (resolvedPromises) {
+        console.log('Done');
+        return resolvedPromises;
+    }, function (error) {
+        console.log('Error(s) while scraping!'.red);
+    });
 }
 
 function prepareRowObjects(rowObjects) {
@@ -56,4 +109,87 @@ function createTSV(rowObjects) {
 function getFormattedDate(dateString) {
     var dateObject = new Date(dateString);
     return [dateObject.getFullYear(), (dateObject.getMonth() + 101).toString().substring(1, 3), (dateObject.getDate() + 100).toString().substring(1, 3)].join('-');
+}
+
+function getTextFor(useXHTMLNamespace, path, xmlString, childNodeIndex) {
+    const doc = new dom({
+        errorHandler: {
+            warning: (msg) => {},
+            error: (msg) => {},
+            fatalError: (msg) => {
+                console.log(msg.red)
+            },
+        },
+    }).parseFromString(xmlString);
+    var nodes;
+    if (useXHTMLNamespace) {
+        const select = xpath.useNamespaces({
+            "x": "http://www.w3.org/1999/xhtml"
+        });
+        nodes = select(path, doc);
+    } else {
+        nodes = xpath.select(path, doc);
+    }
+    if (nodes.length === 0) {
+        return '';
+    }
+    if (childNodeIndex) {
+        return nodes[0].childNodes[childNodeIndex].data
+    }
+    if (nodes[0].firstChild) {
+        return nodes[0].firstChild.data;
+    }
+    return null;
+}
+
+function stringToDoc(xmlString) {
+    var doc = new dom({
+        errorHandler: {
+            warning: (msg) => {},
+            error: (msg) => {},
+            fatalError: (msg) => {
+                console.log(msg.red)
+            },
+        },
+    }).parseFromString(xmlString);
+    return doc;
+}
+
+function getTextFromDoc(useXHTMLNamespace, path, doc, childNodeIndex) {
+    var nodes;
+    if (useXHTMLNamespace) {
+        const select = xpath.useNamespaces({
+            "x": "http://www.w3.org/1999/xhtml"
+        });
+        nodes = select(path, doc);
+    } else {
+        nodes = xpath.select(path, doc);
+    }
+    if (nodes.length === 0) {
+        return '';
+    }
+    if (childNodeIndex) {
+        return nodes[0].childNodes[childNodeIndex].data
+    }
+    if (nodes[0].firstChild) {
+        return nodes[0].firstChild.data;
+    }
+    return null;
+}
+
+function digitsOnly(text) {
+    return text ? text.replace(/\D/g, '') : '';
+}
+
+function getNodes(useXHTMLNamespace, path, doc) {
+    var nodes;
+    if (useXHTMLNamespace) {
+        const select = xpath.useNamespaces({
+            "x": "http://www.w3.org/1999/xhtml"
+        });
+        nodes = select(path, doc);
+    } else {
+        nodes = xpath.select(path, doc);
+    }
+    return nodes;
 }

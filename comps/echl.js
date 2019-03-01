@@ -1,8 +1,8 @@
 var request = require('request');
-var common = require('./common');
+var common = require('../common');
 
 module.exports = {
-    getCSV: async function () {
+    getTSV: async function () {
         var url = 'https://www.echl.com/api/s3?q=schedule-b63cca00bd4b4b0caac58c1c.json';
 
         var gameUrls = await new Promise(function (resolve, reject) {
