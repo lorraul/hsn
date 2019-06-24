@@ -6,33 +6,26 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     getTSV: async function () {
+        //RS
+        //var initUrl = 'https://hokej.cz/chance-liga/zapasy?matchList-view-displayAll=1&matchList-filter-season=2018&matchList-filter-competition=6280';
+        //po
+        var initUrl = 'https://hokej.cz/chance-liga/zapasy?matchList-filter-season=2018&matchList-filter-competition=6305';
 
-        //RS: https://hokej.cz/tipsport-extraliga/zapasy?matchList-view-displayAll=1&matchList-filter-season=2018&matchList-filter-competition=6238
-        //PO: https://hokej.cz/tipsport-extraliga/zapasy?matchList-filter-season=2018&matchList-filter-competition=6400
-
-        var initUrl = 'https://hokej.cz/tipsport-extraliga/zapasy?matchList-filter-season=2018&matchList-filter-competition=6400';
-
-        var gameListDocument = await common.asyncGetHTMLs([initUrl]);
-
-        const doc = new dom({
-            errorHandler: {
-                warning: (msg) => {},
-                error: (msg) => {},
-                fatalError: (msg) => {
-                    console.log(msg.red)
-                },
-            },
-        }).parseFromString(gameListDocument[0]);
-        const nodes = xpath.select('//tr[contains(@class, \'js-preview__link\')]', doc);
+        var gameDoc = await common.asyncGetHTMLs([initUrl]);
+        gameDoc = common.stringToDoc(gameDoc[0]);
+        var gameRowNodes = common.getNodes(false, '//tr[contains(@class, \'js-preview__link\')]', gameDoc);
         var gameUrls = [];
-        nodes.forEach(function (node, index) {
-            gameUrls.push('https://hokej.cz/zapas/' + nodes[index].attributes[0].value.split('/')[2]);
+        gameRowNodes.forEach(function (rowNode) {
+            if (!rowNode.childNodes[5].attributes['colspan']) {
+                gameUrls.push('https://hokej.cz/zapas/' + rowNode.attributes[0].value.split('/')[2]);
+            }
         });
 
         var gameDocuments = await common.asyncGetHTMLs(gameUrls);
 
         var rowObjects = [];
-        var useXHTMLNamespace = false;
+        var useXHTMLNamespace = true;
+
         gameDocuments.forEach(function (gameDoc, index) {
             if (!gameDoc) {
                 return;
@@ -49,8 +42,9 @@ module.exports = {
             if (!location) {
                 location = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[5]/div/div[4]/div[1]/div/div[3]/span[3]', gameDoc);
             }
+
             rowObjects.push({
-                competition: 'czel',
+                competition: 'cze2',
                 season: '1819',
                 stage: 'PO',
                 date: formatDate(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[1]/div/ul/li[2]', gameDoc, 1)),
@@ -64,55 +58,44 @@ module.exports = {
             });
             console.log('row ' + index + ' / ' + gameDocuments.length + ' done');
         });
+
         rowObjects = common.prepareRowObjects(rowObjects);
         var tsv = common.createTSV(rowObjects);
         return tsv;
     }
 };
 
+function formatDate(date) {
+    var dateArray = date.split(' ')[0].split('.');
+    return [dateArray[2], (parseInt(dateArray[1]) + 100).toString().substring(1, 3), (parseInt(dateArray[0]) + 100).toString().substring(1, 3)].join('-');
+}
+
 function getTeamName(name) {
     switch (name) {
-        case 'Aukro Berani Zlín':
-            name = 'HC Zlín';
+        case 'AZ RESIDOMO Havířov':
+            name = 'AZ Havířov';
             break;
-        case 'HC Dynamo Pardubice':
-            name = 'Dynamo Pardubice';
+        case 'ČEZ Motor České Budějovice':
+            name = 'HC České Budějovice';
             break;
         case 'HC Dukla Jihlava':
             name = 'Dukla Jihlava';
             break;
-        case 'HC Kometa Brno':
-            name = 'Kometa Brno';
+        case 'HC RT TORAX Poruba 2011':
+            name = 'HC Poruba';
             break;
-        case 'HC Oceláři Třinec':
-            name = 'Oceláři Třinec';
+        case 'HC ZUBR Přerov':
+            name = 'HC Přerov';
             break;
-        case 'HC Škoda Plzeň':
-            name = 'HC Plzeň';
+        case 'Hokej Ústí nad Labem s.r.o.':
+            name = 'HC Slovan Ústí nad Labem';
             break;
-        case 'HC Sparta Praha':
-            name = 'Sparta Praha';
+        case 'SK Trhači Kadaň':
+            name = 'SK Kadaň';
             break;
-        case 'HC VÍTKOVICE RIDERA':
-            name = 'HC Vítkovice';
-            break;
-        case 'HC VERVA Litvínov':
-            name = 'HC Litvínov';
-            break;
-        case 'Mountfield HK':
-            name = 'HK Hradec Králové';
-            break;
-        case 'HC Energie Karlovy Vary':
-            name = 'HC Karlovy Vary';
-            break;
-        case 'PSG Berani Zlín':
-            name = 'HC Zlín';
+        case 'VHK ROBE Vsetín':
+            name = 'VHK Vsetín';
             break;
     }
     return name;
-}
-
-function formatDate(date) {
-    var dateArray = date.split(' ')[0].split('.');
-    return [dateArray[2], (parseInt(dateArray[1]) + 100).toString().substring(1, 3), (parseInt(dateArray[0]) + 100).toString().substring(1, 3)].join('-');
 }

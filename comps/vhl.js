@@ -7,8 +7,14 @@ var dom = require('xmldom').DOMParser;
 module.exports = {
     getTSV: async function () {
         var gameUrls = [];
-        for (var i = 74100; i < 74400; i++) {
-            gameUrls.push('http://www.vhlru.ru/report/704/?idgame=' + i);
+        //RS
+        //74000-74800
+        //http://www.vhlru.ru/report/704/?idgame=
+        //PO
+        //80900-81710
+        //http://www.vhlru.ru/report/707/?idgame=
+        for (var i = 81600; i < 81710; i++) {
+            gameUrls.push('http://www.vhlru.ru/report/707/?idgame=' + i);
         }
 
         var gameDocuments = await common.asyncGetHTMLs(gameUrls);
@@ -33,7 +39,7 @@ module.exports = {
             rowObjects.push({
                 competition: 'vhl',
                 season: '1819',
-                stage: 'RS',
+                stage: 'PO',
                 date: getFormattedDateVHL(date),
                 team1: getTeamName(team11, team12),
                 team2: getTeamName(team21, team22),

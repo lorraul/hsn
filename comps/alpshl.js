@@ -3,7 +3,11 @@ var common = require('../common');
 
 module.exports = {
     getTSV: async function () {
-        var initUrl = 'https://api.hockeydata.net/data/ebel/Schedule?apiKey=175fe3ea6bf375c7c4cba4f747c33d84&lang=en&referer=www.alps.hockey&timestamp=1537968141000&widgetOptions=%7B%22semantic%22%3Atrue%2C%22noScorers%22%3Atrue%7D&divisionId=3468&_=1537968089816';
+        //RS
+        //https://api.hockeydata.net/data/ebel/Schedule?apiKey=175fe3ea6bf375c7c4cba4f747c33d84&lang=en&referer=www.alps.hockey&timestamp=1537968141000&widgetOptions=%7B%22semantic%22%3Atrue%2C%22noScorers%22%3Atrue%7D&divisionId=3468&_=1537968089816
+        //PO: 
+        //https://api.hockeydata.net/data/ebel/Schedule?apiKey=175fe3ea6bf375c7c4cba4f747c33d84&lang=en&referer=www.alps.hockey&timestamp=1556002197107&divisionId=3465&widgetOptions=%7B%22semantic%22%3Atrue%2C%22noScorers%22%3Atrue%7D&_=1556002195082
+        var initUrl = 'https://api.hockeydata.net/data/ebel/Schedule?apiKey=175fe3ea6bf375c7c4cba4f747c33d84&lang=en&referer=www.alps.hockey&timestamp=1556002197107&divisionId=3465&widgetOptions=%7B%22semantic%22%3Atrue%2C%22noScorers%22%3Atrue%7D&_=1556002195082';
 
         var initResponse = await common.asyncGetJSONs([initUrl]);
 
@@ -23,7 +27,7 @@ module.exports = {
             rowObjects.push({
                 competition: 'alpshl',
                 season: '1819',
-                stage: 'RS',
+                stage: 'PO',
                 date: gameData.scheduledDate.value,
                 team1: getTeamName(gameData.homeTeamLongname),
                 team2: getTeamName(gameData.awayTeamLongname),
@@ -33,6 +37,7 @@ module.exports = {
                 location: gameData.location.longname,
                 source: 'https://alps.hockey/en/statistics/game/?gameId=' + gameData.id + '&divisionId=' + gameData.divisionId
             });
+            console.log('row ' + index + ' / ' + gameObjects.length + ' done');
         });
         rowObjects = common.prepareRowObjects(rowObjects);
         var tsv = common.createTSV(rowObjects);

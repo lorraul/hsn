@@ -3,7 +3,10 @@ var common = require('../common');
 
 module.exports = {
     getTSV: async function () {
-        var initUrl = 'http://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&key=f322673b6bcae299&fmt=json&client_code=lhjmq&lang=en&season_id=190&team_id=&league_code=&fmt=json';
+        //RS
+        //http://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&key=f322673b6bcae299&fmt=json&client_code=lhjmq&lang=en&season_id=190&team_id=&league_code=&fmt=json
+
+        var initUrl = 'http://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&key=f322673b6bcae299&fmt=json&client_code=lhjmq&lang=en&season_id=191&team_id=&league_code=&fmt=json';
 
         var response = await common.asyncGetJSONs([initUrl]);
 

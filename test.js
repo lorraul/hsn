@@ -7,12 +7,18 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     main: async function () {
-        var initUrl = 'http://stats.swehockey.se/Game/Events/393666';
-        var gameDoc = await common.asyncGetHTMLs([initUrl]);
-        gameDoc = common.stringToDoc(gameDoc[0]);
-        var useXHTMLNamespace = false;
-        var comp = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="groupStandingResultContent"]/table/tr[1]/td/table/tr/td/table/tr[2]/td[2]/h3', gameDoc);
-
-        console.log(comp);
+        request({
+            url: 'https://web.api.digitalshift.ca/partials/stats/schedule/table?order=datetime&all=true&division_id=2055&start_id=g-84883&offset=1&limit=300',
+            method: 'GET',
+            headers: {
+                Authorization: 'ticket="JnYnJc-0IdkfmoA7PeoaV1cBOZZRTF8RMyCno5UaXbSeFgrmS2Ge2Q8godyIYCqxK1mkV_j_fnjmAoJTsfdVPzyt"',
+                Origin: 'https://www.federalhockey.com',
+                Referer: 'https://web.api.digitalshift.ca/',
+            }
+        }, function (a, b, c) {
+            console.log(a);
+            console.log(b);
+            console.log(c);
+        });
     }
 };

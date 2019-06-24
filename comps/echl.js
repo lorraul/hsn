@@ -3,7 +3,7 @@ var common = require('../common');
 
 module.exports = {
     getTSV: async function () {
-        var url = 'https://www.echl.com/api/s3?q=schedule-b63cca00bd4b4b0caac58c1c.json';
+        var url = 'https://www.echl.com/api/s3?q=schedule-3a63eb2cd27d9ea4634084e4.json';
 
         var gameUrls = await new Promise(function (resolve, reject) {
             request(url, function (error, response, body) {
@@ -38,7 +38,7 @@ module.exports = {
             rowObjects.push({
                 competition: 'echl',
                 season: '1819',
-                stage: 'RS',
+                stage: 'PO',
                 date: common.getFormattedDate(game.data.startDate),
                 team1: game.data.teams.home.name,
                 team2: game.data.teams.away.name,
@@ -48,6 +48,7 @@ module.exports = {
                 location: game.data.venue.name,
                 source: 'https://www.echl.com/en/matches/' + game.data._entityId + '/'
             });
+            console.log('row ' + index + ' / ' + gameObjects.length + ' done');
         });
         rowObjects = common.prepareRowObjects(rowObjects);
         var tsv = common.createTSV(rowObjects);

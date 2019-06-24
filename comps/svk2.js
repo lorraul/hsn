@@ -10,7 +10,7 @@ module.exports = {
         //RS 99950-100236
         //PO 100400 - 100456
         //POUT 100457 - 100468
-        for (var i = 100457; i < 100468; i++) {
+        for (var i = 100400; i < 100456; i++) {
             gameUrls.push('https://stnliga.hockeyslovakia.sk/sk/stats/matches/669/st-nicolaus-1-hokejova-liga/match/' + i + '/stats');
         }
 
@@ -34,7 +34,7 @@ module.exports = {
             score1 = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/div[3]/div/div[1]/div/div/header/div[1]/div[2]/span[1]/span[1]', gameDoc);
             score2 = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/div[3]/div/div[1]/div/div/header/div[1]/div[2]/span[1]/span[2]', gameDoc);
 
-            var stage = 'POUT';
+            var stage = 'PO';
 
             if (stage == 'RS' || stage == 'POUT') {
                 attendance = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/div[3]/div/div[1]/div/div/header/div[2]/div/span[4]', gameDoc, 1);

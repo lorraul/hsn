@@ -7,7 +7,8 @@ var dom = require('xmldom').DOMParser;
 module.exports = {
     getTSV: async function () {
         var gameUrls = [];
-        for (var i = 393400; i <= 393700; i++) {
+        //RS: 393400-393900
+        for (var i = 423830; i <= 423890; i++) {
             gameUrls.push('http://stats.swehockey.se/Game/Events/' + i);
         }
 
@@ -22,7 +23,7 @@ module.exports = {
             }
             urlDoc = common.stringToDoc(urlDoc);
             var comp = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="groupStandingResultContent"]/table/tr[1]/td/table/tr/td/table/tr[2]/td[2]/h3', urlDoc);
-            if (comp !== 'SHL') {
+            if (comp !== 'SM-slutspel') {
                 return;
             }
             var teams = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="groupStandingResultContent"]/table/tr[1]/td/table/tr/td/table/tr[1]/th/h2', urlDoc);
@@ -31,7 +32,7 @@ module.exports = {
             rowObjects.push({
                 competition: 'shl',
                 season: '1819',
-                stage: 'RS',
+                stage: 'PO',
                 date: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="groupStandingResultContent"]/table/tr[1]/td/table/tr/td/table/tr[2]/td[1]/h3', urlDoc).substr(0, 10),
                 team1: getTeamName(teams.split('-')[0].trim()),
                 team2: getTeamName(teams.split('-')[1].trim()),

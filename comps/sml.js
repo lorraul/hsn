@@ -6,7 +6,9 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     getTSV: async function () {
-        var initUrl = 'http://liiga.fi/fi/ottelut/2018-2019/runkosarja/';
+        //RS: http://liiga.fi/fi/ottelut/2018-2019/runkosarja/
+        //PO: https://liiga.fi/fi/ottelut/2018-2019/playoffs/
+        var initUrl = 'https://liiga.fi/fi/ottelut/2018-2019/playoffs/';
 
         var gameDoc = await common.asyncGetHTMLs([initUrl]);
         gameDoc = common.stringToDoc(gameDoc[0]);
@@ -21,7 +23,7 @@ module.exports = {
             rowObjects.push({
                 competition: 'sml',
                 season: '1819',
-                stage: 'RS',
+                stage: 'PO',
                 date: getFormattedDateSML(rowNode.attributes[0].value),
                 team1: getTeamName(teams[0].replace(/\W/g, '')),
                 team2: getTeamName(teams[1].replace(/\W/g, '')),
