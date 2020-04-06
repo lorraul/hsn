@@ -6,9 +6,13 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     getTSV: async function () {
+        //1920
+        //rs: seasonid=19860
+        //PO: seasonId=20131
+        //1819
         //rs: seasonid=18674
         //po: seasonid=19207
-        var initUrl = 'http://ligue_magnus.wttstats.pointstreak.com/leagueschedule.html?leagueid=1426&seasonid=19207';
+        var initUrl = 'http://ligue_magnus.wttstats.pointstreak.com/leagueschedule.html?leagueid=1426&seasonid=20131';
 
         var gameDoc = await common.asyncGetHTMLs([initUrl]);
         gameDoc = common.stringToDoc(gameDoc[0]);
@@ -37,13 +41,14 @@ module.exports = {
             }
             rowObjects.push({
                 competition: 'fra',
-                season: '1819',
+                season: '1920',
                 stage: 'PO',
                 date: formatDate(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/x:tr[2]/x:td/x:table/x:tr/x:td[6]', gameDoc)),
                 team1: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/x:html/x:body/x:table[2]/x:tr[1]/x:td[1]/x:table[1]/x:tr/x:td[2]/x:strong', gameDoc).trim()),
                 team2: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/x:html/x:body/x:table[3]/x:tr[1]/x:td[1]/x:table[1]/x:tr/x:td[2]/x:strong', gameDoc).trim()),
                 score1: score[0],
                 score2: score[1],
+                scoretype: getScoretype(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[5]/x:td[1]', gameDoc), common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[6]/x:td[1]', gameDoc)),
                 attendance: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/x:tr[2]/x:td/x:table/x:tr/x:td[10]', gameDoc).trim().replace(/\D/g, ''),
                 location: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/x:tr[2]/x:td/x:table/x:tr/x:td[4]', gameDoc),
                 source: gameUrls[index]
@@ -57,6 +62,16 @@ module.exports = {
 
     }
 };
+
+function getScoretype(string1, string2) {
+    if (string1 == 'Total') {
+        return 'RT'
+    }
+    if (string2 == 'SO') {
+        return 'SO'
+    }
+    return 'OT';
+}
 
 function getTeamName(name) {
     switch (name) {

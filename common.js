@@ -18,14 +18,20 @@ module.exports = {
     getNodes: getNodes,
     asyncCustomJSONRequest: asyncCustomJSONRequest,
     createIndexList: createIndexList,
-    formatDateIIHF: formatDateIIHF
+    formatDateIIHF: formatDateIIHF,
+    getScoretypeNA: getScoretypeNA,
+    getScoretypePS: getScoretypePS
 };
 
-async function asyncGetJSONs(urls, callbackName) {
+async function asyncGetJSONs(urls, callbackName, removeFromStart, removeFromEnd) {
     var promises = [];
     for (var i = 0; i < urls.length; i++) {
         promises.push(new Promise((resolve, reject) => {
             request(urls[i], function (error, response, body) {
+                if (!response) {
+                    console.log('xxx - urls[i]'.yellow);
+                    resolve(null);
+                }
                 var consoleText = response.statusCode + ' - ' + response.request.uri.href;
                 if (response.statusCode != 200) {
                     console.log(consoleText.red);
@@ -44,6 +50,16 @@ async function asyncGetJSONs(urls, callbackName) {
                                 var regex = new RegExp('^' + callbackName + '\\(|\\);$', 'g');
                                 resolve(JSON.parse(body.replace(regex, '')));
                             } else {
+                                /*
+                                console.log(callbackName);
+                                console.log(removeFromStart);
+                                console.log(removeFromEnd);
+                                */
+                                if (removeFromStart && removeFromEnd) {
+                                    body.replace(removeFromStart, '');
+                                    body.replace(removeFromEnd, '');
+                                }
+                                //console.log(body);
                                 resolve(JSON.parse(body));
                             }
                         }
@@ -104,8 +120,15 @@ async function asyncGetHTMLs(urls, callback) {
     for (var i = 0; i < urls.length; i++) {
         promises.push(new Promise((resolve, reject) => {
             request(urls[i], function (error, response, body) {
+
+                //blr may return errors with 200 status
+                /*if (body.indexOf('settings.php') != -1 || body.indexOf('error') != -1) {
+                    resolve('error');
+                }*/
+
                 if (!response) {
-                    console.log(error);
+                    console.error('No response!');
+                    reject(error);
                     return;
                 } else {
                     var consoleText = response.statusCode + ' - ' + response.request.uri.href;
@@ -116,6 +139,7 @@ async function asyncGetHTMLs(urls, callback) {
                     console.log(consoleText.green);
                 }
                 if (error) {
+                    console.error('Error on connecting to: ' + urls[i]);
                     console.log(error);
                     resolve(null);
                 } else {
@@ -129,7 +153,7 @@ async function asyncGetHTMLs(urls, callback) {
     }
 
     return Promise.all(promises).then(function (resolvedPromises) {
-        console.log('Done');
+        //console.log('Done');
         return resolvedPromises;
     }, function (error) {
         console.log('Error(s) while scraping!'.red);
@@ -156,7 +180,7 @@ function prepareRowObjects(rowObjects) {
 function createTSV(rowObjects) {
     var TSV = '<pre>';
     rowObjects.forEach(function (rowObject) {
-        var rowString = ['', rowObject.competition, rowObject.season, rowObject.stage, rowObject.date, rowObject.team1, rowObject.team2, rowObject.score1, rowObject.score2, rowObject.attendance, rowObject.location, rowObject.source, rowObject.alt, rowObject.note].join('\t') + '\n';
+        var rowString = ['', rowObject.competition, rowObject.season, rowObject.stage, rowObject.date, rowObject.team1, rowObject.team2, rowObject.score1, rowObject.score2, rowObject.scoretype, rowObject.attendance, rowObject.location, rowObject.source, rowObject.alt, rowObject.note].join('\t') + '\n';
         TSV += rowString;
     });
     TSV += '\n';
@@ -275,4 +299,30 @@ function createIndexList(startPath, filter) {
 function formatDateIIHF(date) {
     var dateArray = date.split('.');
     return [dateArray[2], dateArray[1], dateArray[0]].join('-');
+}
+
+function getScoretypeNA(game_status) {
+    var scoretype;
+    switch (game_status) {
+        case 'Final':
+            scoretype = 'RT';
+            break;
+        case 'Final OT':
+            scoretype = 'OT';
+            break;
+        case 'Final SO':
+            scoretype = 'SO';
+            break;
+    }
+    return scoretype;
+}
+
+function getScoretypePS(string1, string2) {
+    if (string1.toLowerCase() == 'total') {
+        return 'RT'
+    }
+    if (string2 == 'SO') {
+        return 'SO'
+    }
+    return 'OT';
 }

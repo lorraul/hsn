@@ -6,12 +6,43 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     getTSV: async function () {
-        var gameUrls = [];
 
-        //1920 RS: 33 1-136, PO: 34 1-6
-        //1819 RS: 31 i: 1-136, PO: 32 i: 1-17
-        for (var i = 1; i <= 8; i++) {
-            gameUrls.push('http://www.alhockey.com/popup/34/game/prompt' + i + '.html');
+        /*
+        1617
+        RS: 27 1-216
+        PO: 28 1-19
+        
+        1516
+        RS: 25 1-216
+        PO: 26 1-21
+        
+        1415
+        RS: 23 1-215
+        PO: 24 1-16
+        
+        1314
+        RS: 21 1-168
+        PO: 22 1-14
+        
+        1213
+        RS: 19 1-147
+        PO: 20 1-14
+        
+        1112
+        RS: 17 1-126
+        PO: 18 1-14
+        
+        1011
+        RS: 15 1-126
+        PO: 16 1-10
+        */
+
+
+        var gameUrls = [];
+        var gameStageId = '16';
+
+        for (var i = 1; i <= 10; i++) {
+            gameUrls.push('http://www.alhockey.com/popup/' + gameStageId + '/game/prompt' + i + '.html');
         }
 
         var gameDocuments = await common.asyncGetHTMLs(gameUrls);
@@ -31,18 +62,10 @@ module.exports = {
             } else {
                 scoretype = 'SO';
             }
-            /*
-            var score = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[7]/x:td[2]', gameDoc).split(':');
-            if (score.length != 2) {
-                score = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[6]/x:td[2]', gameDoc).split(':');
-                if (score.length != 2) {
-                    score = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[5]/x:td[2]', gameDoc).split(':');
-                }
-            }*/
             rowObjects.push({
                 competition: 'alih',
-                season: '1920',
-                stage: 'SF',
+                season: '1011',
+                stage: 'PO',
                 date: getFormattedDateAL(common.getTextFromDoc(useXHTMLNamespace, '//table/tr/td/table[1]/tr/th', urlDoc)),
                 team1: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '//table/tr/td/table[2]/tr[1]/td[1]/span', urlDoc)),
                 team2: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '//table/tr/td/table[2]/tr[1]/td[5]/span', urlDoc)),
@@ -51,7 +74,7 @@ module.exports = {
                 scoretype: scoretype,
                 attendance: common.digitsOnly(common.getTextFromDoc(useXHTMLNamespace, '//table/tr/td/table[1]/tr/th', urlDoc, 4)),
                 location: getLocationAL(common.getTextFromDoc(useXHTMLNamespace, '//table/tr/td/table[1]/tr/th', urlDoc, 2)),
-                source: 'http://www.alhockey.com/sheet/34/game/ogs' + (index + 1) + '.html'
+                source: 'http://www.alhockey.com/sheet/' + gameStageId + '/game/ogs' + (index + 1) + '.html'
             });
             console.log('row ' + index + ' / ' + gameDocuments.length + ' done');
         });

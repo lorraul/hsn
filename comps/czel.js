@@ -7,10 +7,9 @@ var dom = require('xmldom').DOMParser;
 module.exports = {
     getTSV: async function () {
 
-        //RS: https://hokej.cz/tipsport-extraliga/zapasy?matchList-view-displayAll=1&matchList-filter-season=2018&matchList-filter-competition=6238
-        //PO: https://hokej.cz/tipsport-extraliga/zapasy?matchList-filter-season=2018&matchList-filter-competition=6400
+        //1920 RS: https://hokej.cz/tipsport-extraliga/zapasy?matchList-filter-season=2019&matchList-filter-competition=6475&matchList-view-displayAll=1
 
-        var initUrl = 'https://hokej.cz/tipsport-extraliga/zapasy?matchList-filter-season=2018&matchList-filter-competition=6400';
+        var initUrl = 'https://hokej.cz/tipsport-extraliga/zapasy?matchList-filter-season=2019&matchList-filter-competition=6619';
 
         var gameListDocument = await common.asyncGetHTMLs([initUrl]);
 
@@ -51,13 +50,14 @@ module.exports = {
             }
             rowObjects.push({
                 competition: 'czel',
-                season: '1819',
+                season: '1920',
                 stage: 'PO',
                 date: formatDate(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[1]/div/ul/li[2]', gameDoc, 1)),
                 team1: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[2]/div[1]/a/h2[1]', gameDoc)),
                 team2: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[2]/div[3]/a/h2[1]', gameDoc)),
                 score1: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="snippet-matchOverview-score"]/div/span[1]', gameDoc),
                 score2: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="snippet-matchOverview-score"]/div/span[3]', gameDoc),
+                scoretype: getScoreType(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="snippet-matchOverview-score"]/div/div/span[1]', gameDoc)),
                 attendance: attendance,
                 location: location,
                 source: gameUrls[index]
@@ -115,4 +115,14 @@ function getTeamName(name) {
 function formatDate(date) {
     var dateArray = date.split(' ')[0].split('.');
     return [dateArray[2], (parseInt(dateArray[1]) + 100).toString().substring(1, 3), (parseInt(dateArray[0]) + 100).toString().substring(1, 3)].join('-');
+}
+
+function getScoreType(scoretype) {
+    if (scoretype === 'konec po prodloužení') {
+        return 'OT';
+    }
+    if (scoretype === 'konec po s.n.') {
+        return 'SO';
+    }
+    return 'RT';
 }

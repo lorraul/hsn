@@ -6,48 +6,143 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     getTSV: async function () {
-        var initUrl = 'http://extraliga.stats.pointstreak.com/leagueschedule.html?leagueid=684&seasonid=19199';
 
-        var gameDoc = await common.asyncGetHTMLs([initUrl]);
-        gameDoc = common.stringToDoc(gameDoc[0]);
-        var gameRowNodes = common.getNodes(false, '//td[contains(@align, \'center\')]', gameDoc);
         var gameUrls = [];
-        gameRowNodes.forEach(function (rowNode) {
-            if (rowNode.childNodes.length !== 5) return;
-            //if (gameUrls.length > 50) return;
-            gameUrls.push('http://extraliga.stats.pointstreak.com/' + rowNode.childNodes[1].attributes[0].value);
-        });
+        //221-993
+        //40-esével kell venni, hogy a szerver ne kuldjon vissza hibaüzenetet
+        for (var i = 960; i < 1000; i++) {
+            gameUrls.push('https://www.hockey.by/new-admin/games/' + i + '/?print=protocol');
+        }
 
         var gameDocuments = await common.asyncGetHTMLs(gameUrls);
 
-        var rowObjects = [];
-        var useXHTMLNamespace = true;
+        //some requests may return error page with status 200, so check again
+        var tryAgainUrls = [];
+        gameDocuments.forEach(function (gameDocString, index) {
+            if (gameDocString == 'error') {
+                tryAgainUrls.push(gameUrls[index]);
+                console.error('Error 200 #1: ' + gameUrls[index]);
+            }
+        });
 
-        gameDocuments.forEach(function (gameDoc, index) {
-            if (!gameDoc) {
+        if (tryAgainUrls.length > 0) {
+            return;
+        }
+
+        recursiveGetHTML(gameDocuments, tryAgainUrls);
+
+        async function recursiveGetHTML(gameDocuments, tryAgainUrls) {
+            var gameDocuments2 = await common.asyncGetHTMLs(tryAgainUrls);
+
+            var tryAgainUrls2 = [];
+            gameDocuments2.forEach(function (gameDocString, index) {
+                if (gameDocString == 'error') {
+                    tryAgainUrls2.push(tryAgainUrls[index]);
+                    console.error('Error 200: ' + tryAgainUrls[index])
+                } else {
+                    gameDocuments.push(gameDocString);
+                }
+            });
+
+            recursiveGetHTML(gameDocuments, tryAgainUrls2);
+        }
+
+        /*
+        var gameDocuments2 = await common.asyncGetHTMLs(tryAgainUrls);
+
+        var tryAgainUrls2 = [];
+        gameDocuments2.forEach(function (gameDocString, index) {
+            if (gameDocString == 'error') {
+                tryAgainUrls2.push(tryAgainUrls[index]);
+                console.error('Error 200 #2: ' + tryAgainUrls[index])
+            } else {
+                gameDocuments.push(gameDocString);
+            }
+        });
+
+        var gameDocuments3 = await common.asyncGetHTMLs(tryAgainUrls2);
+
+        var tryAgainUrls3 = [];
+        gameDocuments3.forEach(function (gameDocString, index) {
+            if (gameDocString == 'error') {
+                tryAgainUrls3.push(tryAgainUrls2[index]);
+                console.error('Error 200 #3: ' + tryAgainUrls2[index])
+            } else {
+                gameDocuments.push(gameDocString);
+            }
+        });*/
+
+        var rowObjects = [];
+        var useXHTMLNamespace = false;
+
+        /*
+        var validUrls = [
+            'https://www.hockey.by/new-admin/games/221/?print=protocol',
+            'https://www.hockey.by/new-admin/games/223/?print=protocol',
+            'https://www.hockey.by/new-admin/games/224/?print=protocol',
+            'https://www.hockey.by/new-admin/games/233/?print=protocol',
+            'https://www.hockey.by/new-admin/games/234/?print=protocol',
+            'https://www.hockey.by/new-admin/games/235/?print=protocol',
+            'https://www.hockey.by/new-admin/games/240/?print=protocol',
+            'https://www.hockey.by/new-admin/games/241/?print=protocol',
+            'https://www.hockey.by/new-admin/games/242/?print=protocol',
+            'https://www.hockey.by/new-admin/games/260/?print=protocol',
+            'https://www.hockey.by/new-admin/games/261/?print=protocol'
+        ];
+        
+                console.log(gameDocuments.length);
+        */
+
+        gameDocuments.forEach(function (gameDocString, index) {
+            /*
+            if (validUrls.indexOf(gameUrls[index]) != -1) {
+                console.log('=======================');
+                console.log(gameUrls[index]);
+            }*/
+            if (!gameDocString) {
                 return;
             }
-            gameDoc = common.stringToDoc(gameDoc);
-            var score = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[7]/x:td[2]', gameDoc).split(':');
+            var gameDoc = common.stringToDoc(gameDocString);
+            var competition = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/tbody/tr[2]/td/table/tr[1]/td[2]', gameDoc);
+
+            /*
+                if (validUrls.indexOf(gameUrls[index]) != -1) {
+                    console.log(competition);
+                    if (!competition) {
+                        console.log(gameDocString)
+                    }
+                }*/
+
+            if (competition != 'Дивизион "А"') {
+                return;
+            }
+            /*
+            if (validUrls.indexOf(gameUrls[index]) != -1) {
+                console.log('continue');
+            }*/
+            var score = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[4]/tbody/tr/td[1]/div/table/tbody/tr[6]/td[2]', gameDoc).split(':');
             if (score.length != 2) {
-                score = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[6]/x:td[2]', gameDoc).split(':');
+                score = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[4]/tbody/tr/td[1]/div/table/tbody/tr[5]/td[2]', gameDoc).split(':');
                 if (score.length != 2) {
-                    score = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="summary"]/x:tr[2]/x:td[1]/x:table/x:tr[5]/x:td[2]', gameDoc).split(':');
+                    score = common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[4]/tbody/tr/td[1]/div/table/tbody/tr[4]/td[2]', gameDoc).split(':');
                 }
             }
-            rowObjects.push({
+            var attendance = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/tbody/tr[2]/td/table/tr[2]/td[6]', gameDoc);
+            var rowObject = {
                 competition: 'blr',
-                season: '1819',
-                stage: 'PO',
-                date: formatDate(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/x:tr[2]/x:td/x:table/x:tr/x:td[6]', gameDoc)),
-                team1: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/x:html/x:body/x:table[2]/x:tr[1]/x:td[1]/x:table[1]/x:tr/x:td[2]/x:strong', gameDoc).trim()),
-                team2: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/x:html/x:body/x:table[3]/x:tr[1]/x:td[1]/x:table[1]/x:tr/x:td[2]/x:strong', gameDoc).trim()),
+                season: '1920',
+                stage: 'RS',
+                date: formatDate(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/tbody/tr[2]/td/table/tr[1]/td[4]', gameDoc)),
+                team1: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[2]/tbody/tr[1]/td[1]/div', gameDoc).trim()),
+                team2: getTeamName(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[3]/tbody/tr[1]/td[1]/div', gameDoc).trim()),
                 score1: score[0],
                 score2: score[1],
-                attendance: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/x:tr[2]/x:td/x:table/x:tr/x:td[10]', gameDoc).trim().replace(/\D/g, ''),
-                location: getLocation(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/x:tr[2]/x:td/x:table/x:tr/x:td[4]', gameDoc)),
+                scoretype: getScoretype(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[4]/tbody/tr/td[1]/div/table/tbody/tr[4]/td[1]', gameDoc), common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[1]/table[4]/tbody/tr/td[1]/div/table/tbody/tr[5]/td[2]', gameDoc)),
+                attendance: attendance ? attendance.trim().replace(/\D/g, '') : '',
+                location: getLocation(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="topinfo"]/tbody/tr[2]/td/table/tr[2]/td[2]', gameDoc)),
                 source: gameUrls[index]
-            });
+            };
+            rowObjects.push(rowObject);
             console.log('row ' + index + ' / ' + gameDocuments.length + ' done');
         });
 
@@ -56,6 +151,16 @@ module.exports = {
         return tsv;
     }
 };
+
+function getScoretype(string1, string2) {
+    if (string1 == 'Всего') {
+        return 'RT'
+    }
+    if (string2 == 'SO') {
+        return 'SO'
+    }
+    return 'OT';
+}
 
 function getLocation(name) {
     switch (name) {
@@ -71,6 +176,9 @@ function getLocation(name) {
         case 'Дворец спорта Могилев':
             name = 'Sports Palace, Mogilev';
             break;
+        case 'Ледовый дворец спорта г. Могилев':
+            name = 'Ice Sports Center, Mogilev';
+            break;
         case 'ДС и К Новополоцк':
             name = 'Palace of Sports and Culture';
             break;
@@ -82,6 +190,9 @@ function getLocation(name) {
             break;
         case 'ЛД Солигорск (Soligorsk)':
             name = 'Sports and Entertainment Complex';
+            break;
+        case 'Спортивно-развлекательный центр г. Солигорск':
+            name = 'Sports and Entertainment Complex, Soligorsk';
             break;
         case 'Орша ЛД':
             name = 'Ice Sports Palace, Orsha';
@@ -104,7 +215,16 @@ function getLocation(name) {
         case 'ЛДС г. Гродно':
             name = 'Ice Sports Palace, Grodno';
             break;
+        case 'Ледовый дворец спорта г. Лида':
+            name = 'Ice Sports Palace, Grodno';
+            break;
+        case 'Ледовый дворец спорта г. Гродно':
+            name = 'Ice Sports Palace, Grodno';
+            break;
         case 'ЛД Металлург (Metallurg)':
+            name = 'Ice Palace Metalurh';
+            break;
+        case 'Ледовый дворец «Металлург»':
             name = 'Ice Palace Metalurh';
             break;
         case 'Ледовый дворец г. Лида':
@@ -139,6 +259,15 @@ function getLocation(name) {
             break;
         case 'ДС Минск':
             name = 'Minsk';
+            break;
+        case 'Чижовка-арена':
+            name = 'Čyžoŭka-Arena';
+            break;
+        case 'Ледовый дворец г. Молодечно':
+            name = 'Ledovyy Dvorets, Maladzyechna';
+            break;
+        case 'Ледовый дворец г. Гомель':
+            name = 'Ice Palace, Gomel';
             break;
         default:
             name = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';

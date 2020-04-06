@@ -3,10 +3,10 @@ var common = require('../common');
 
 module.exports = {
     getTSV: async function () {
-        //rs
-        //var initUrl = 'https://www.hockey.no/live/scoreboard/getdata?seasonid=200830&tournamentid=381196&teamid=0&date=' + getDateParamNOR();
-        //po
-        var initUrl = 'https://www.hockey.no/live/scoreboard/getdata?seasonid=200830&tournamentid=381197&teamid=0&date=' + getDateParamNOR();
+        //1819
+        //rs: https://www.hockey.no/live/scoreboard/getdata?seasonid=200830&tournamentid=381196&teamid=0&date=
+        //po: https://www.hockey.no/live/scoreboard/getdata?seasonid=200830&tournamentid=381197&teamid=0&date=
+        var initUrl = 'https://www.hockey.no/live/scoreboard/getdata?seasonid=200856&tournamentid=388970&teamid=0&date=' + getDateParamNOR();
 
         var initResponse = await common.asyncGetJSONs([initUrl]);
 
@@ -30,15 +30,20 @@ module.exports = {
                 return;
             }
             var gameJson = initResponse[0].OldMatches[index];
+            /*var scoretypeargs = {
+                ot: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="boxscore-page"]/table[4]/tbody/tr/td', gameDoc),
+                so: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="boxscore-page"]/table[5]/tbody/tr/td', gameDoc)
+            }*/
             rowObjects.push({
                 competition: 'nor',
-                season: '1819',
-                stage: 'PO',
+                season: '1920',
+                stage: 'RS',
                 date: getFormattedDateDI(gameJson.FormattedDate),
                 team1: getTeamName(gameJson.HomeTeamShortName.trim()),
                 team2: getTeamName(gameJson.AwayTeamShortName.trim()),
                 score1: gameJson.HomeGoals,
                 score2: gameJson.AwayGoals,
+                scoretype: '',
                 attendance: attendance,
                 location: gameJson.ActivityAreaName,
                 source: gameUrls[index]
@@ -52,6 +57,16 @@ module.exports = {
 
     }
 };
+
+/*function getScoretype(scoretypeargs) {
+    if (scoretypeargs.ot === '(no scoring)' && scoretypeargs.so === '(no scoring)') {
+        return 'RT';
+    }
+    if (scoretypeargs.ot === '(no scoring)') {
+        return 'SO'
+    }
+    return 'OT';
+}*/
 
 function getTeamName(name) {
     switch (name) {
@@ -81,6 +96,12 @@ function getTeamName(name) {
             break;
         case 'Manglerud Star Elite':
             name = 'Manglerud Star';
+            break;
+        case 'Narvik':
+            name = 'Narvik Hockey';
+            break;
+        case 'Sparta Elite':
+            name = 'Sparta Sarpsborg';
             break;
     }
     return name;

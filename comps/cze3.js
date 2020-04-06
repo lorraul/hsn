@@ -8,7 +8,10 @@ module.exports = {
     getTSV: async function () {
         //RS
         //https://www.hokej.cz/2-liga/zapasy?t=j15vg7rg4nuslhrfldrk5obpm7gq9zopc1lv0vwe7rf4z10jqvlizd6&matchList-filter-season=2018&matchList-filter-competition=0
-        var initUrl = 'https://www.hokej.cz/2-liga/zapasy?t=j15vg7rg4nuslhrfldrk5obpm7gq9zopc1lv0vwe7rf4z10jqvlizd6&matchList-filter-season=2018&matchList-filter-competition=0';
+        //PO
+        //var initUrl = 'https://www.hokej.cz/2-liga/zapasy?t=j15vg7rg4nuslhrfldrk5obpm7gq9zopc1lv0vwe7rf4z10jqvlizd6&matchList-filter-season=2018&matchList-filter-competition=0';
+
+        var initUrl = 'https://www.hokej.cz/2-liga/zapasy?t=j15vg7rg4nuslhrfldrk5obpm7gq9zopc1lv0vwe7rf4z10jqvlizd6&matchList-filter-season=2019&matchList-filter-competition=0';
 
         var gameDoc = await common.asyncGetHTMLs([initUrl]);
         gameDoc = common.stringToDoc(gameDoc[0]);
@@ -16,7 +19,7 @@ module.exports = {
         var gameUrls = [];
         gameRowNodes.forEach(function (rowNode) {
             if (!rowNode.childNodes[5].attributes['colspan']) {
-                gameUrls.push('https://hokej.cz/zapas/' + rowNode.attributes[0].value.split('/')[2]);
+                gameUrls.push('https://hokej.cz/zapas/' + rowNode.attributes[0].value.split('/')[2].replace('?t=j15vg7rg4nuslhrfldrk5obpm7gq9zopc1lv0vwe7rf4z10jqvlizd6', ''));
             }
         });
 
@@ -44,13 +47,14 @@ module.exports = {
 
             rowObjects.push({
                 competition: 'cze3',
-                season: '1819',
+                season: '1920',
                 stage: 'RS',
                 date: formatDate(common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[1]/div/ul/li[2]', gameDoc, 1)),
                 team1: common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[2]/div[1]/a/h2[1]', gameDoc),
                 team2: common.getTextFromDoc(useXHTMLNamespace, '/html/body/div[18]/div/div[3]/div/div[2]/div[3]/a/h2[1]', gameDoc),
                 score1: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="snippet-matchOverview-score"]/div/span[1]', gameDoc),
                 score2: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="snippet-matchOverview-score"]/div/span[3]', gameDoc),
+                scoretype: getScoreType(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="snippet-matchOverview-score"]/div/div/span[1]', gameDoc)),
                 attendance: attendance,
                 location: location,
                 source: gameUrls[index]
@@ -67,4 +71,38 @@ module.exports = {
 function formatDate(date) {
     var dateArray = date.split(' ')[0].split('.');
     return [dateArray[2], (parseInt(dateArray[1]) + 100).toString().substring(1, 3), (parseInt(dateArray[0]) + 100).toString().substring(1, 3)].join('-');
+}
+
+function getScoreType(scoretype) {
+    if (scoretype === 'konec po prodloužení') {
+        return 'OT';
+    }
+    if (scoretype === 'konec po s.n.') {
+        return 'SO';
+    }
+    return 'RT';
+}
+
+function getTeamName(name) {
+    switch (name) {
+        case 'Mor. Budějovice':
+            name = 'HC Moravské Budějovice 2005';
+            break;
+        case 'Val. Meziříčí':
+            name = 'HC Bobři Valašské Meziříčí';
+            break;
+        case 'Jablonec':
+            name = 'HC Vlci Jablonec nad Nisou';
+            break;
+        case 'IHC Králové Písek':
+            name = 'IHC Písek';
+            break;
+        case 'David servis':
+            name = 'HC David servis České Budějovice';
+            break;
+        case 'HC ISMM Kopřivnice':
+            name = 'HC Kopřivnice';
+            break;
+    }
+    return name;
 }

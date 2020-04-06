@@ -3,7 +3,8 @@ var common = require('../common');
 
 module.exports = {
     getTSV: async function () {
-        var url = 'https://www.echl.com/api/s3?q=schedule-3a63eb2cd27d9ea4634084e4.json';
+        //1819 po: https://www.echl.com/api/s3?q=schedule-3a63eb2cd27d9ea4634084e4.json
+        var url = 'https://www.echl.com/api/s3?q=schedule-cd56ccb42b787a950e354ab7.json';
 
         var gameUrls = await new Promise(function (resolve, reject) {
             request(url, function (error, response, body) {
@@ -37,13 +38,14 @@ module.exports = {
             }
             rowObjects.push({
                 competition: 'echl',
-                season: '1819',
-                stage: 'PO',
+                season: '1920',
+                stage: 'RS',
                 date: common.getFormattedDate(game.data.startDate),
                 team1: game.data.teams.home.name,
                 team2: game.data.teams.away.name,
                 score1: game.data.results.scores.home,
                 score2: game.data.results.scores.away,
+                scoretype: getScoretype(game.data.results.periods),
                 attendance: game.data.audience,
                 location: game.data.venue.name,
                 source: 'https://www.echl.com/en/matches/' + game.data._entityId + '/'
@@ -55,3 +57,13 @@ module.exports = {
         return tsv;
     }
 };
+
+function getScoretype(periods) {
+    if (periods.length == 3) {
+        return 'RT'
+    } else if (periods.length == 4) {
+        return 'OT'
+    } else if (periods.length == 5) {
+        return 'SO'
+    }
+}

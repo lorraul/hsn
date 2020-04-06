@@ -6,7 +6,7 @@ var dom = require('xmldom').DOMParser;
 
 module.exports = {
     getTSV: async function () {
-        var gameDoc = await common.asyncGetHTMLs(['http://stats.sportsadmin.dk/schedule.aspx?tournamentID=1589']);
+        var gameDoc = await common.asyncGetHTMLs(['http://stats.sportsadmin.dk/schedule.aspx?tournamentID=1582']);
         gameDoc = common.stringToDoc(gameDoc[0]);
         var useXHTMLNamespace = false;
         var gameRowNodes = common.getNodes(useXHTMLNamespace, '//tr/td[last()]/a', gameDoc);
@@ -31,7 +31,7 @@ module.exports = {
             }
             var attendance = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="ctl00_ContentPlaceHolder1_lblSpectators"]', urlDoc);
             rowObjects.push({
-                competition: 'dnk',
+                competition: 'dnk2',
                 season: '1920',
                 stage: 'RS',
                 date: getFormattedDateC(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="ctl00_ContentPlaceHolder1_lblDato"]', urlDoc).split('kl.')[0]),
@@ -77,6 +77,3 @@ function getFormattedDateC(dateString) {
     var dateArray = dateString.split('-');
     return [dateArray[2], dateArray[1], dateArray[0]].join('-');
 }
-//ot: http://www.hockeyligaen.dk/gamesheet2.aspx?GameId=49208
-//so: http://www.hockeyligaen.dk/gamesheet2.aspx?GameId=49213
-//rt: http://www.hockeyligaen.dk/gamesheet2.aspx?GameId=49207

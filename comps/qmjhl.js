@@ -6,7 +6,7 @@ module.exports = {
         //RS
         //http://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&key=f322673b6bcae299&fmt=json&client_code=lhjmq&lang=en&season_id=190&team_id=&league_code=&fmt=json
 
-        var initUrl = 'http://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&key=f322673b6bcae299&fmt=json&client_code=lhjmq&lang=en&season_id=191&team_id=&league_code=&fmt=json';
+        var initUrl = 'http://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&key=f322673b6bcae299&fmt=json&client_code=lhjmq&lang=en&season_id=193&team_id=&league_code=&fmt=json';
 
         var response = await common.asyncGetJSONs([initUrl]);
 
@@ -15,13 +15,14 @@ module.exports = {
             var url = 'http://theqmjhl.ca/gamecentre/' + gameObject.game_id + '/boxscore';
             rowObjects.push({
                 competition: 'qmjhl',
-                season: '1819',
+                season: '1920',
                 stage: 'RS',
                 date: common.getFormattedDate(gameObject.date_played),
                 team1: getTeamName(gameObject.home_team_name.replace(',', '')),
                 team2: getTeamName(gameObject.visiting_team_name.replace(',', '')),
                 score1: gameObject.home_goal_count,
                 score2: gameObject.visiting_goal_count,
+                scoretype: common.getScoretypeNA(gameObject.game_status),
                 attendance: gameObject.attendance,
                 location: gameObject.venue_name,
                 source: url

@@ -5,7 +5,8 @@ module.exports = {
     getTSV: async function () {
         var gameUrls = [];
         var shotUrls = [];
-        for (var i = 1000; i < 1600; i++) {
+        //1428-2100
+        for (var i = 1428; i < 2100; i++) {
             gameUrls.push('https://www.del.org/live-ticker/matches/' + i + '/game-header.json');
             shotUrls.push('https://www.del.org/live-ticker/visualization/shots/' + i + '.json');
         }
@@ -20,13 +21,14 @@ module.exports = {
             }
             rowObjects.push({
                 competition: 'del',
-                season: '1819',
+                season: '1920',
                 stage: 'RS',
                 date: gameObjects2[index].match.date,
                 team1: getTeamName(gameObject.teamInfo.home.name),
                 team2: getTeamName(gameObject.teamInfo.visitor.name),
                 score1: gameObject.results.score.final.score_home,
                 score2: gameObject.results.score.final.score_guest,
+                scoretype: getScoreType(gameObject.results),
                 attendance: gameObject.numberOfViewers,
                 location: gameObject.stadium
             });
@@ -54,4 +56,17 @@ function getTeamName(name) {
             break;
     }
     return name;
+}
+
+function getScoreType(results) {
+    if (results.shooting) {
+        return 'SO';
+    }
+    if (results.extra_time) {
+        return 'OT';
+    }
+    if (!results.shooting && !results.extra_time) {
+        return 'RT';
+    }
+    return ''; //this should not happen
 }

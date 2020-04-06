@@ -5,20 +5,26 @@ const xmlser = require('xmlserializer');
 var xpath = require('xpath');
 var dom = require('xmldom').DOMParser;
 
-module.exports = {
-    main: async function () {
-        request({
-            url: 'https://web.api.digitalshift.ca/partials/stats/schedule/table?order=datetime&all=true&division_id=2055&start_id=g-84883&offset=1&limit=300',
-            method: 'GET',
-            headers: {
-                Authorization: 'ticket="JnYnJc-0IdkfmoA7PeoaV1cBOZZRTF8RMyCno5UaXbSeFgrmS2Ge2Q8godyIYCqxK1mkV_j_fnjmAoJTsfdVPzyt"',
-                Origin: 'https://www.federalhockey.com',
-                Referer: 'https://web.api.digitalshift.ca/',
-            }
-        }, function (a, b, c) {
-            console.log(a);
-            console.log(b);
-            console.log(c);
-        });
+
+var main = async function () {
+    var gameUrls = [];
+    for (var i = 81790; i < 81791; i++) {
+        gameUrls.push('https://en.khl.ru/game/851/' + i + '/protocol/');
     }
-};
+
+    var gameDocuments = await common.asyncGetHTMLs(gameUrls); // jshint ignore:line
+
+    var rowObjects = [];
+    var useXHTMLNamespace = false;
+
+    gameDocuments.forEach(function (gameDoc, index) {
+        if (!gameDoc) {
+            return;
+        }
+        gameDoc = common.stringToDoc(gameDoc);
+        var oooo = common.getNodes(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[2]/dt/h3', gameDoc);
+        console.log('-------------------');
+        console.log(oooo);
+        console.log('-------------------');
+    });
+}

@@ -4,9 +4,12 @@ var common = require('../common');
 module.exports = {
     getTSV: async function () {
         var gameUrls = [];
+        //1920 RS 117 15712-16075
+        //1920 PO 121 16121-16124
         //RS 112, 15280 - 15600
-        for (var i = 15600; i < 15750; i++) {
-            gameUrls.push('https://www.del-2.org/liga/archiv/115/spiel/' + i + '/');
+        //PO 115, 15600 - 15750
+        for (var i = 16121; i <= 16124; i++) {
+            gameUrls.push('https://www.del-2.org/liga/archiv/121/spiel/' + i + '/');
         }
         var gameDocuments = await common.asyncGetHTMLs(gameUrls);
 
@@ -18,26 +21,34 @@ module.exports = {
                 return;
             }
             urlDoc = common.stringToDoc(urlDoc);
-            var scoreText = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/table[1]/tbody/tr[1]/td[2]/p[1]', urlDoc);
+            var scoreText = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/div/table[1]/tbody/tr[1]/td[2]/p[1]', urlDoc);
             if (scoreText && scoreText.trim() === '0 - 0') {
                 return;
             }
+
+            //testing location node
+            /*
+            var nodetemp = common.getNodes(false, '//*[@id="fullcontent"]/div/div[4]/following-sibling::div[1]', urlDoc);
+            console.log(nodetemp[0]);
+            */
+            //location not working, html is invalid
+
             rowObjects.push({
                 competition: 'del2',
-                season: '1819',
-                stage: 'RS',
-                date: getFormattedDateC(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/table[1]/tbody/tr[2]/td[2]/strong', urlDoc)),
-                team1: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/table[1]/tbody/tr[2]/td[1]/h3', urlDoc),
-                team2: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/table[1]/tbody/tr[2]/td[3]/h3', urlDoc),
-                score1: scoreText.split(' - ')[0],
-                score2: scoreText.split(' - ')[1],
-                attendance: common.digitsOnly(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/table[1]/tbody/tr[2]/td[2]', urlDoc, 2)),
-                location: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="tabs-4"]/p[1]', urlDoc, 1),
+                season: '1920',
+                stage: 'PO',
+                date: getFormattedDateC(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/div/table[1]/tbody/tr[2]/td[2]/strong', urlDoc)),
+                team1: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/div/table[1]/tbody/tr[2]/td[1]/h3', urlDoc),
+                team2: common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/div/table[1]/tbody/tr[2]/td[3]/h3', urlDoc),
+                score1: common.digitsOnly(scoreText.split(' - ')[0]),
+                score2: common.digitsOnly(scoreText.split(' - ')[1]),
+                scoretype: getSCoretype(scoreText),
+                attendance: common.digitsOnly(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/div/table[1]/tbody/tr[2]/td[2]', urlDoc, 2)),
+                location: '', //common.getTextFromDoc(useXHTMLNamespace, '//*[@id="fullcontent"]/div/div[8]/table/tbody/tr/td', urlDoc),
                 source: gameUrls[index]
             });
             console.log('row ' + index + ' / ' + gameDocuments.length + ' done');
         });
-
         rowObjects = rowObjects.filter(function (o) {
             return o.date != '--';
         });
@@ -47,6 +58,19 @@ module.exports = {
         return tsv;
     }
 };
+
+function getSCoretype(scoreText) {
+    if (scoreText.indexOf('SO') != -1) {
+        return 'SO';
+    }
+    if (scoreText.indexOf('OT') != -1) {
+        return 'OT';
+    }
+
+    if (scoreText.indexOf('OT') == -1 && scoreText.indexOf('SO') == -1) {
+        return 'RT';
+    }
+}
 
 function getFormattedDateC(dateString) {
     var dateArray = dateString.split(', ')[0].split('.');

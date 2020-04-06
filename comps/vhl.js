@@ -7,14 +7,21 @@ var dom = require('xmldom').DOMParser;
 module.exports = {
     getTSV: async function () {
         var gameUrls = [];
-        //RS
-        //74000-74800
-        //http://www.vhlru.ru/report/704/?idgame=
-        //PO
-        //80900-81710
-        //http://www.vhlru.ru/report/707/?idgame=
-        for (var i = 81600; i < 81710; i++) {
-            gameUrls.push('http://www.vhlru.ru/report/707/?idgame=' + i);
+        /*
+        1819
+          RS
+          74000-74800
+          http://www.vhlru.ru/report/704/?idgame=
+          PO
+          80900-81710
+          http://www.vhlru.ru/report/707/?idgame=
+          
+        1920 http://www.vhlru.ru/calendar/872/season/0/
+        84929-85156
+        */
+
+        for (var i = 84929; i < 85650; i++) {
+            gameUrls.push('http://www.vhlru.ru/report/872/?idgame=' + i);
         }
 
         var gameDocuments = await common.asyncGetHTMLs(gameUrls);
@@ -35,16 +42,18 @@ module.exports = {
             var team21 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="content"]/x:div[1]/x:table[1]/x:tr[1]/x:td[3]/x:a[1]', gameDoc);
             var team22 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="content"]/x:div[1]/x:table[1]/x:tr[1]/x:td[3]/x:div/x:strong', gameDoc);
             var score12 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="content"]/x:div[1]/x:table[1]/x:tr[1]/x:td[2]/x:p/x:span', gameDoc);
+            var scoretype = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="content"]/x:div[1]/x:table[1]/x:tr[1]/x:td[2]/x:div', gameDoc);
             var attendance = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="content"]/x:div[1]/x:div[2]/x:p[2]', gameDoc);
             rowObjects.push({
                 competition: 'vhl',
-                season: '1819',
-                stage: 'PO',
+                season: '1920',
+                stage: 'RS',
                 date: getFormattedDateVHL(date),
                 team1: getTeamName(team11, team12),
                 team2: getTeamName(team21, team22),
                 score1: score12.split(':')[0].replace(/\D/g, ''),
                 score2: score12.split(':')[1].replace(/\D/g, ''),
+                scoretype: getScoretype(scoretype),
                 attendance: attendance ? attendance.replace(/\D/g, '') : '',
                 location: '',
                 source: gameUrls[index]
@@ -56,6 +65,20 @@ module.exports = {
         return tsv;
     }
 };
+
+function getScoretype(scoretypedom) {
+    var nr = scoretypedom.split(':').length - 1;
+    if (nr === 3) {
+        return 'RT';
+    }
+    if (nr === 4) {
+        return 'OT'
+    }
+    if (nr === 5) {
+        return 'SO'
+    }
+    return undefined;
+}
 
 function getTeamName(name1, name2) {
     var name = name1 + ' ' + name2;
@@ -146,6 +169,27 @@ function getTeamName(name1, name2) {
             break;
         case 'ХК Саров (Саров)':
             name = 'HK Sarov';
+            break;
+        case 'ОРДЖИ (Пекин)':
+            name = 'ORG Beijing';
+            break;
+        case 'Торпедо-Горький (Нижний Новгород)':
+            name = 'Torpedo-Gorky';
+            break;
+        case 'Ростов (Ростов-на-Дону)':
+            name = 'HK Rostov';
+            break;
+        case 'Динамо Тв (Тверь)':
+            name = 'Dynamo Tver';
+            break;
+        case 'Номад (Нур-Султан)':
+            name = 'Nomad Astana';
+            break;
+        case 'КРС-БСУ (Пекин)':
+            name = 'KRS Heilongjiang';
+            break;
+        case 'Хумо (Ташкент)':
+            name = 'Humo Tashkent';
             break;
     }
     return name;

@@ -2,15 +2,21 @@ var request = require('request');
 var common = require('../common');
 
 module.exports = {
-    getTSV: async function () {
+    getTSV: async function () { // jshint ignore:line
         var gameUrls = [];
-        //RS 671 71800-72400
-        //PO 674
-        for (var i = 80800; i < 81674; i++) {
-            gameUrls.push('https://en.khl.ru/game/674/' + i + '/protocol/');
+        //for (var i = 81788; i < 81921; i++) {
+        for (var i = 81788; i < 81789; i++) {
+            gameUrls.push('https://en.khl.ru/game/851/' + i + '/protocol/');
         }
 
-        var gameDocuments = await common.asyncGetHTMLs(gameUrls);
+        /*
+        var gameDocuments;
+
+        while (!gameDocuments) {
+            gameDocuments = await common.asyncGetHTMLs(gameUrls); // jshint ignore:line
+        }
+*/
+        var gameDocuments = await common.asyncGetHTMLs(gameUrls); // jshint ignore:line
 
         var rowObjects = [];
         var useXHTMLNamespace = false;
@@ -28,19 +34,27 @@ module.exports = {
             var team12 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[1]/dd/p', gameDoc);
             var team21 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[3]/dd/h3', gameDoc);
             var team22 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[3]/dd/p', gameDoc);
-            var score12 = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[2]/dt/h3/text()', gameDoc);
-            score12 += common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[2]/dt/h3/*/text()', gameDoc);
+            var score12 = '';
+            var oooo = common.getNodes(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/dl[2]/dt/h3', gameDoc);
+            for (var i = 0; i < oooo[0].childNodes.length; i++) {
+                if (oooo[0].childNodes[i].nodeName === 'b') {
+                    score12 += oooo[0].childNodes[i].firstChild.nodeValue
+                } else {
+                    score12 += oooo[0].childNodes[i].nodeValue;
+                }
+            }
             var attendance = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/ul/li[2]/span[2]', gameDoc, 2);
             var location = common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/ul/li[2]/span[2]', gameDoc);
             rowObjects.push({
                 competition: 'khl',
                 season: '1819',
-                stage: 'PO',
+                stage: 'RS',
                 date: getFormattedDate(common.getTextFromDoc(useXHTMLNamespace, '//*[@id="wrapper"]/div[2]/div[2]/ul/li[1]/span[2]', gameDoc)),
                 team1: getTeamName(team11, team12),
                 team2: getTeamName(team21, team22),
                 score1: score12.split('&ndash;&')[0].replace(/\D/g, ''),
                 score2: score12.split('&ndash;&')[1].replace(/\D/g, ''),
+                scoretype: score12.split(' ')[1] ? score12.split(' ')[1] : 'RT',
                 attendance: attendance ? attendance.replace(/\D/g, '') : '',
                 location: location ? location.split(', ')[1] : '',
                 source: gameUrls[index]
